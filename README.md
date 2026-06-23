@@ -1,5 +1,7 @@
 # native
 
+[![test](https://github.com/crgimenes/native/actions/workflows/ci.yml/badge.svg)](https://github.com/crgimenes/native/actions/workflows/ci.yml)
+
 Small, focused Go packages that bind native OS and hardware APIs **without cgo**.
 
 Each package fills one obvious gap in the standard library — clipboard, desktop
@@ -49,7 +51,7 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 
 | Package          | What                                             | macOS | Windows | Linux | Status |
 | ---------------- | ------------------------------------------------ | ----- | ------- | ----- | ------ |
-| `clipboard`      | Read/write text clipboard                        | NSPasteboard | Win32 clipboard | X11/Wayland | 🚧 |
+| [`clipboard`](clipboard/) | Read/write text clipboard                   | NSPasteboard | Win32 clipboard | X11/Wayland | 🚧 |
 | `notify`         | Desktop notifications                            | UNUserNotification | WinRT toast | D-Bus | ⬜ |
 | `tray`           | System tray / status-bar icon + menu             | NSStatusItem | Shell_NotifyIcon | StatusNotifierItem | ⬜ |
 | `keychain`       | Credential / secret storage                      | Keychain | Credential Manager / DPAPI | Secret Service | ⬜ |
@@ -86,6 +88,13 @@ Every package follows the same shape so they're predictable to use and to write:
   and sentinel errors live there and delegate to unexported per-platform funcs.
 - **Sentinel errors**, e.g. `var ErrUnsupported = errors.New("clipboard: not supported on this platform")`.
 - **No native types in signatures.** Inputs/outputs are Go values.
+- **A package `README.md`** (API table, per-platform status, caveats) **and a
+  runnable example** in `examples/<pkg>/` — same module, no extra deps. See
+  [`clipboard`](clipboard/) for the shape.
+- **`golangci-lint` clean on every `GOOS`.** The `unsafe.Pointer(uintptr)` that
+  `go vet`'s `unsafeptr` flags (common with purego — e.g. a `GlobalLock` pointer)
+  is spelled through a `ptr(u uintptr) unsafe.Pointer` reinterpret helper, which
+  is ABI-identical and silences the false positive.
 
 ### ABI discipline (the part that bites)
 
@@ -109,11 +118,14 @@ porting glaze's three backends:
 ## Testing reality
 
 ABI bugs do not appear in cross-compilation — you have to run on the target.
-`make cross` compile-checks every `GOOS/GOARCH` (catches build-tag and obvious
-breakage); real verification is per-platform CI (GitHub Actions: Windows + Linux
-runners, amd64 + arm64) plus the maintainer's hardware. A file that says
-`// UNTESTED on this host` means exactly that: it compiles, but a human/CI on
-that OS hasn't confirmed it yet. Hardware is the final word.
+CI (GitHub Actions) builds, vets and tests on macOS, Windows and Linux runners,
+runs `make cross` to compile-check every `GOOS/GOARCH`, and runs golangci-lint
+across each `GOOS`. Where a package has a backend on the runner its tests run for
+real (`clipboard`'s round trip on macOS and Windows); where it doesn't, they skip
+(`clipboard` on Linux, for now) instead of failing. A file that says
+`// UNTESTED on this host` means exactly that: it compiles, but no human or CI on
+that OS has confirmed it yet. Hardware is the final word — even CI runners each
+have one clean, single-stack environment and miss real-desktop combinations.
 
 ## License
 
