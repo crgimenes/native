@@ -1,0 +1,29 @@
+.PHONY: all build vet test fmt tidy cross
+
+# Default: the checks CI runs.
+all: build vet test
+
+build:
+	go build ./...
+
+vet:
+	go vet ./...
+
+test:
+	go test ./...
+
+fmt:
+	gofmt -w .
+
+tidy:
+	go mod tidy
+
+# Compile-check every supported target without running. Catches ABI/build-tag
+# breakage that a single-host `go build` misses (see README "Testing reality").
+cross:
+	GOOS=darwin  GOARCH=arm64 go build ./...
+	GOOS=darwin  GOARCH=amd64 go build ./...
+	GOOS=windows GOARCH=amd64 go build ./...
+	GOOS=windows GOARCH=arm64 go build ./...
+	GOOS=linux   GOARCH=amd64 go build ./...
+	GOOS=linux   GOARCH=arm64 go build ./...
