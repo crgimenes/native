@@ -59,7 +59,7 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 | `serial`         | Serial port I/O                                  | termios | DCB/CreateFile | termios | ⬜ |
 | `mmap`           | Memory-mapped files / shared memory              | mmap | MapViewOfFile | mmap | ⬜ |
 | `singleinstance` | Single-instance lock + arg hand-off to running   | flock/socket | named mutex/pipe | flock/socket | ⬜ |
-| `openurl`        | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open/portal | ⬜ |
+| [`openurl`](openurl/) | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open | ✅ |
 | `power`          | Inhibit sleep, battery/power state               | IOKit assertions | SetThreadExecutionState | systemd/UPower | ⬜ |
 
 ### Lives in glaze, not here
