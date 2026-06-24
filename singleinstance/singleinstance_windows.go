@@ -98,7 +98,14 @@ func acquire(id string, opts Options) (*Instance, error) {
 
 	return &Instance{release: func() error {
 		close(stop)
-		closeHandle(h) // unblocks ConnectNamedPipe so the server goroutine exits
+		// CloseHandle does NOT cancel a synchronous ConnectNamedPipe a thread is
+		// blocked in, so wake the server by connecting to the pipe ourselves: its
+		// ConnectNamedPipe returns, it sees stop closed, and exits. Then close the
+		// server handle.
+		if c := createFileW(name, genericWrite, 0, 0, openExisting, 0, 0); c != invalidHandle {
+			closeHandle(c)
+		}
+		closeHandle(h)
 		return nil
 	}}, nil
 }
