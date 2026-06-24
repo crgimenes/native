@@ -34,7 +34,7 @@ func main() {
 	}
 	_, _ = f.WriteString("revealed by native/openurl\n")
 	_ = f.Close()
-	defer os.Remove(f.Name())
+	defer func() { _ = os.Remove(f.Name()) }()
 
 	if err := openurl.Reveal(f.Name()); err != nil {
 		log.Fatalf("reveal %q: %v", f.Name(), err)
