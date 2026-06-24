@@ -5,6 +5,7 @@ package clipboard
 import (
 	"errors"
 	"fmt"
+	"runtime"
 	"sync"
 	"unsafe"
 
@@ -76,7 +77,16 @@ func cstr(id objc.ID) string {
 }
 
 // autorelease wraps f in an NSAutoreleasePool, draining it afterward.
+//
+// LockOSThread pins the goroutine for the whole pool lifetime: an
+// NSAutoreleasePool is thread-local, so if the goroutine migrated between
+// creating the pool and the deferred drain (which Go's scheduler is free to do),
+// the pool would be drained on the wrong thread and corrupt the autorelease
+// stack — an intermittent SIGSEGV. The defers run LIFO, so drain happens before
+// UnlockOSThread, i.e. while still on the creating thread.
 func autorelease(f func()) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	cls, _ := class("NSAutoreleasePool")
 	pool := cls.Send(sel("alloc")).Send(sel("init"))
 	defer pool.Send(sel("drain"))

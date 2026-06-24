@@ -6,6 +6,7 @@ package openurl
 
 import (
 	"fmt"
+	"runtime"
 	"sync"
 
 	"github.com/ebitengine/purego"
@@ -60,7 +61,15 @@ func nsstr(s string) objc.ID {
 }
 
 // autorelease wraps f in an NSAutoreleasePool, draining it afterward.
+//
+// LockOSThread pins the goroutine for the pool's lifetime: an NSAutoreleasePool
+// is thread-local, so if the goroutine migrated between creating the pool and the
+// deferred drain, the pool would be drained on the wrong thread and corrupt the
+// autorelease stack — an intermittent SIGSEGV. The defers run LIFO, so drain
+// happens before UnlockOSThread, i.e. while still on the creating thread.
 func autorelease(f func()) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	cls, _ := class("NSAutoreleasePool")
 	pool := cls.Send(sel("alloc")).Send(sel("init"))
 	defer pool.Send(sel("drain"))
