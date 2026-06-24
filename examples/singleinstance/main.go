@@ -28,7 +28,8 @@ func main() {
 	switch {
 	case errors.Is(err, singleinstance.ErrAlreadyRunning):
 		// We are a secondary launch: hand our args to the primary and exit.
-		if e := singleinstance.Send(appID, os.Args[1:]); e != nil {
+		e := singleinstance.Send(appID, os.Args[1:])
+		if e != nil {
 			log.Fatalf("forward args to running instance: %v", e)
 		}
 		fmt.Println("an instance is already running; forwarded our args to it")

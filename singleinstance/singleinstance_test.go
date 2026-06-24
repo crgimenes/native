@@ -51,7 +51,8 @@ func TestAcquireSendRoundTrip(t *testing.T) {
 	}
 
 	want := []string{"open", "/tmp/a b.txt", "café ✓"}
-	if err := singleinstance.Send(id, want); err != nil {
+	err = singleinstance.Send(id, want)
+	if err != nil {
 		t.Fatalf("Send: %v", err)
 	}
 	select {
@@ -75,7 +76,8 @@ func TestReleaseAllowsReacquire(t *testing.T) {
 	if err != nil {
 		t.Fatalf("first Acquire: %v", err)
 	}
-	if err := inst.Release(); err != nil {
+	err = inst.Release()
+	if err != nil {
 		t.Fatalf("Release: %v", err)
 	}
 

@@ -19,7 +19,8 @@ import (
 
 func main() {
 	const page = "https://example.com"
-	if err := openurl.Open(page); err != nil {
+	err := openurl.Open(page)
+	if err != nil {
 		if errors.Is(err, openurl.ErrUnsupported) {
 			log.Fatalf("openurl is not supported on this platform yet: %v", err)
 		}
@@ -36,7 +37,8 @@ func main() {
 	_ = f.Close()
 	defer func() { _ = os.Remove(f.Name()) }()
 
-	if err := openurl.Reveal(f.Name()); err != nil {
+	err = openurl.Reveal(f.Name())
+	if err != nil {
 		log.Fatalf("reveal %q: %v", f.Name(), err)
 	}
 	fmt.Printf("revealed %s in the file manager\n", filepath.Clean(f.Name()))
