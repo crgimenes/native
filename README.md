@@ -4,28 +4,29 @@
 
 Small, focused Go packages that bind native OS and hardware APIs **without cgo**.
 
-Each package fills one obvious gap in the standard library — clipboard, desktop
-notifications, file-system watching, serial ports, mmap, and so on — with a
-clean Go API and a per-platform backend underneath. No C toolchain, no bundled
-native libraries: backends call what the OS already ships, via
+Each package fills one gap the standard library leaves open: clipboard, desktop
+notifications, file-system watching, serial ports, mmap. A clean Go API on top, a
+per-platform backend underneath. No C toolchain, no bundled native libraries. The
+backends call what the OS already ships, through
 [`purego`](https://github.com/ebitengine/purego), `syscall`,
 `dlopen`/`LoadLibrary`, the Objective-C runtime, COM, and D-Bus.
 
-These are siblings of [glaze](https://github.com/crgimenes/glaze) (a pure-Go
-WebView binding) and grew out of the same idea: you can port surprisingly
-complex native integration to Go and keep everything cgo gives up — trivial
-cross-compilation (`CGO_ENABLED=0`), reproducible builds, and a `go install`
-that just works for whoever clones the repo.
+Sibling of [glaze](https://github.com/crgimenes/glaze), the pure-Go WebView
+binding, and it comes from the same bet: you can port genuinely hairy native
+integration to Go and keep what cgo otherwise takes away. `CGO_ENABLED=0` builds,
+six `GOOS/GOARCH` targets cross-compiled from one machine, reproducible output,
+and a `go install` that works for whoever clones the repo with no compiler set
+up.
 
 ## Philosophy
 
 - **Small over sprawling.** One package, one job. No "parallel stdlib", no
   god-package. Each directory here is independently useful and independently
   testable, but they compose into a real desktop app when used together.
-- **Idiomatic Go at the seams.** The public API is plain Go — `string`,
-  `[]byte`, `error`, small option structs. Native handles (`objc.ID`, COM
-  vtables, `HWND`, file descriptors) never leak across the package boundary, so
-  the Win32/Cocoa/portal backend can change without touching callers.
+- **Idiomatic Go at the seams.** The public API is plain Go: `string`, `[]byte`,
+  `error`, small option structs. Native handles (`objc.ID`, COM vtables, `HWND`,
+  file descriptors) never leak across the package boundary, so the
+  Win32/Cocoa/portal backend can change without touching callers.
 - **Zero cgo, always.** `CGO_ENABLED=0` builds and cross-compiles for every
   supported target.
 - **Honest about platforms.** Where a platform genuinely can't do something
@@ -34,7 +35,7 @@ that just works for whoever clones the repo.
 
 ## Non-goals
 
-Deliberately *not* attempted here — these are maintenance black holes or already
+Deliberately *not* attempted here. These are maintenance black holes, or already
 well-served elsewhere:
 
 - A complete GUI toolkit (use glaze + HTML, or a real toolkit).
@@ -67,13 +68,12 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 Features that need the application's window/run loop belong in the desktop
 framework, tracked in [glaze's `TODO.md`](https://github.com/crgimenes/glaze/blob/main/TODO.md):
 
-- **File dialogs** (open/save/choose-directory) — modal, parented to the window.
+- **File dialogs** (open/save/choose-directory): modal, parented to the window.
   glaze already drives `NSOpenPanel` for `<input type=file>`.
-- **Native application menus** — the macOS menu bar, About/Preferences/Quit,
+- **Native application menus**: the macOS menu bar, About/Preferences/Quit,
   window menus on Windows/Linux.
 
-The standalone packages here (`clipboard`, `notify`, `openurl`, `tray`, …) are
-imported *by* glaze; they don't depend on it.
+The standalone packages above are imported *by* glaze; they don't depend on it.
 
 ## Conventions
 
@@ -89,12 +89,12 @@ Every package follows the same shape so they're predictable to use and to write:
 - **Sentinel errors**, e.g. `var ErrUnsupported = errors.New("clipboard: not supported on this platform")`.
 - **No native types in signatures.** Inputs/outputs are Go values.
 - **A package `README.md`** (API table, per-platform status, caveats) **and a
-  runnable example** in `examples/<pkg>/` — same module, no extra deps. See
+  runnable example** in `examples/<pkg>/`, same module, no extra deps. See
   [`clipboard`](clipboard/) for the shape.
 - **`golangci-lint` clean on every `GOOS`.** The `unsafe.Pointer(uintptr)` that
-  `go vet`'s `unsafeptr` flags (common with purego — e.g. a `GlobalLock` pointer)
-  is spelled through a `ptr(u uintptr) unsafe.Pointer` reinterpret helper, which
-  is ABI-identical and silences the false positive.
+  `go vet`'s `unsafeptr` flags (common with purego, e.g. a `GlobalLock` pointer)
+  goes through a `ptr(u uintptr) unsafe.Pointer` reinterpret helper. Same bits,
+  same ABI, spelled that way only to quiet `go vet`.
 
 ### ABI discipline (the part that bites)
 
@@ -103,12 +103,12 @@ porting glaze's three backends:
 
 - **No Go pointer is ever held by native code.** The GC can move Go memory. Pass
   an integer id, keep a `map[id]*T` on the Go side, resolve it in the callback.
-- **Anything handed to native code must stay alive and unmovable** — keep it in a
+- **Anything handed to native code must stay alive and unmovable.** Keep it in a
   package-level slice/map (callback trampolines, COM vtables).
 - **Struct-by-value is architecture-specific.** A 16-byte struct goes by hidden
-  reference on Win64 amd64 but packed into registers on arm64 (AAPCS64) — needs
-  `*_amd64.go` / `*_arm64.go`. **This does not show up in cross-compilation; it
-  compiles clean and breaks at runtime.**
+  reference on Win64 amd64 but packs into registers on arm64 (AAPCS64), so it
+  needs `*_amd64.go` / `*_arm64.go`. **This does not show up in cross-compilation;
+  it compiles clean and breaks at runtime.**
 - **`purego.NewCallback` on Windows** is limited: ≤9 uintptr args, no float /
   struct-by-value, single uintptr return. Design inbound callbacks within that.
 - **Thread affinity.** GUI/COM APIs are pinned to a thread (Cocoa → real main
@@ -117,16 +117,20 @@ porting glaze's three backends:
 
 ## Testing reality
 
-ABI bugs do not appear in cross-compilation — you have to run on the target.
+ABI bugs do not appear in cross-compilation. You have to run on the target.
 CI (GitHub Actions) builds, vets and tests on macOS, Windows and Linux runners,
 runs `make cross` to compile-check every `GOOS/GOARCH`, and runs golangci-lint
 across each `GOOS`. Where a package has a backend on the runner its tests run for
 real (`clipboard`'s round trip on macOS and Windows); where it doesn't, they skip
 (`clipboard` on Linux, for now) instead of failing. A file that says
 `// UNTESTED on this host` means exactly that: it compiles, but no human or CI on
-that OS has confirmed it yet. Hardware is the final word — even CI runners each
-have one clean, single-stack environment and miss real-desktop combinations.
+that OS has confirmed it yet.
+
+Hardware is the final word. A real GNOME desktop ships GTK3 and GTK4 side by
+side; a CI runner carries exactly one stack. That gap hid a `gtk_init` crash in
+glaze until it ran on an actual Ubuntu box, so single-stack CI is necessary but
+not sufficient.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).
