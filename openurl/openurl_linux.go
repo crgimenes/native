@@ -28,7 +28,8 @@ func revealFile(absPath string) error {
 }
 
 func runXdgOpen(arg string) error {
-	if err := exec.Command("xdg-open", arg).Run(); err != nil {
+	err := exec.Command("xdg-open", arg).Run()
+	if err != nil {
 		return fmt.Errorf("openurl: xdg-open %q: %w", arg, err)
 	}
 	return nil

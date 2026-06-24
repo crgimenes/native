@@ -14,7 +14,8 @@ func TestLinuxInvokesXdgOpen(t *testing.T) {
 	argFile := filepath.Join(dir, "arg")
 	fake := filepath.Join(dir, "xdg-open")
 	script := "#!/bin/sh\nprintf '%s' \"$1\" > " + argFile + "\n"
-	if err := os.WriteFile(fake, []byte(script), 0o755); err != nil {
+	err := os.WriteFile(fake, []byte(script), 0o755)
+	if err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
@@ -28,26 +29,32 @@ func TestLinuxInvokesXdgOpen(t *testing.T) {
 	}
 
 	// Open hands the URL to xdg-open unchanged.
-	if err := Open("https://example.com/x"); err != nil {
+	err = Open("https://example.com/x")
+	if err != nil {
 		t.Fatalf("Open: %v", err)
 	}
-	if got := readArg(); got != "https://example.com/x" {
+	got := readArg()
+	if got != "https://example.com/x" {
 		t.Fatalf("xdg-open arg = %q, want the URL", got)
 	}
 
 	// Reveal opens the file's containing folder.
 	sub := filepath.Join(dir, "sub")
-	if err := os.MkdirAll(sub, 0o755); err != nil {
+	err = os.MkdirAll(sub, 0o755)
+	if err != nil {
 		t.Fatal(err)
 	}
 	file := filepath.Join(sub, "file.txt")
-	if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
+	err = os.WriteFile(file, []byte("x"), 0o644)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := Reveal(file); err != nil {
+	err = Reveal(file)
+	if err != nil {
 		t.Fatalf("Reveal: %v", err)
 	}
-	if got := readArg(); got != sub {
+	got = readArg()
+	if got != sub {
 		t.Fatalf("xdg-open arg = %q, want the folder %q", got, sub)
 	}
 }

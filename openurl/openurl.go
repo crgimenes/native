@@ -45,7 +45,8 @@ var allowedSchemes = map[string]bool{
 // a bare hostname or path with no scheme — returns ErrScheme. For a local file
 // use a file:// URL, or Reveal to show it in the file manager.
 func Open(rawurl string) error {
-	if err := validateScheme(rawurl); err != nil {
+	err := validateScheme(rawurl)
+	if err != nil {
 		return err
 	}
 	return openURL(rawurl)
@@ -60,7 +61,8 @@ func Reveal(path string) error {
 	if err != nil {
 		return fmt.Errorf("openurl: resolve %q: %w", path, err)
 	}
-	if _, err := os.Stat(abs); err != nil {
+	_, err = os.Stat(abs)
+	if err != nil {
 		return fmt.Errorf("openurl: reveal %q: %w", path, err)
 	}
 	return revealFile(abs)

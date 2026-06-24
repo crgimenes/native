@@ -20,7 +20,8 @@ import (
 // runtimeDir picks a per-user directory for the lock and socket. XDG_RUNTIME_DIR
 // is the right place on Linux; elsewhere the temp dir is the portable fallback.
 func runtimeDir() string {
-	if d := os.Getenv("XDG_RUNTIME_DIR"); d != "" {
+	d := os.Getenv("XDG_RUNTIME_DIR")
+	if d != "" {
 		return d
 	}
 	return os.TempDir()
@@ -33,11 +34,15 @@ func paths(id string) (lock, sock string) {
 
 func acquire(id string, opts Options) (*Instance, error) {
 	lockPath, sockPath := paths(id)
-	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o600)
+	// lockPath is runtimeDir() + a sha256 hex of id, so it cannot traverse out.
+	f, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o600) // #nosec G304
 	if err != nil {
 		return nil, err
 	}
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
+	// A file descriptor is a small non-negative int, so the conversion is safe.
+	fd := int(f.Fd()) // #nosec G115
+	err = syscall.Flock(fd, syscall.LOCK_EX|syscall.LOCK_NB)
+	if err != nil {
 		_ = f.Close()
 		if errors.Is(err, syscall.EWOULDBLOCK) {
 			return nil, ErrAlreadyRunning
@@ -50,7 +55,7 @@ func acquire(id string, opts Options) (*Instance, error) {
 	_ = os.Remove(sockPath)
 	ln, err := net.Listen("unix", sockPath)
 	if err != nil {
-		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		_ = syscall.Flock(fd, syscall.LOCK_UN)
 		_ = f.Close()
 		return nil, err
 	}
@@ -59,7 +64,7 @@ func acquire(id string, opts Options) (*Instance, error) {
 	return &Instance{release: func() error {
 		_ = ln.Close() // unblocks the Accept loop and unlinks the socket
 		_ = os.Remove(sockPath)
-		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		_ = syscall.Flock(fd, syscall.LOCK_UN)
 		err := f.Close()
 		_ = os.Remove(lockPath)
 		return err

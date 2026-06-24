@@ -7,10 +7,12 @@ import "testing"
 // calling openURL:/activateFileViewerSelectingURLs:, which would actually launch
 // the browser/Finder. Catches a broken framework path or selector name on CI.
 func TestDarwinObjcMarshaling(t *testing.T) {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		t.Fatalf("ensureInit: %v", err)
 	}
-	if _, err := class("NSWorkspace"); err != nil {
+	_, err = class("NSWorkspace")
+	if err != nil {
 		t.Fatalf("class NSWorkspace: %v", err)
 	}
 	urlCls, err := class("NSURL")
@@ -22,14 +24,16 @@ func TestDarwinObjcMarshaling(t *testing.T) {
 		t.Fatalf("class NSArray: %v", err)
 	}
 	autorelease(func() {
-		if u := urlCls.Send(sel("URLWithString:"), nsstr("https://example.com")); u == 0 {
+		u := urlCls.Send(sel("URLWithString:"), nsstr("https://example.com"))
+		if u == 0 {
 			t.Error("URLWithString: returned nil")
 		}
 		fileURL := urlCls.Send(sel("fileURLWithPath:"), nsstr("/tmp"))
 		if fileURL == 0 {
 			t.Error("fileURLWithPath: returned nil")
 		}
-		if arr := arrCls.Send(sel("arrayWithObject:"), fileURL); arr == 0 {
+		arr := arrCls.Send(sel("arrayWithObject:"), fileURL)
+		if arr == 0 {
 			t.Error("arrayWithObject: returned nil")
 		}
 	})

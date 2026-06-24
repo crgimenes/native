@@ -18,7 +18,8 @@ func TestValidateSchemeAllows(t *testing.T) {
 		"file:///tmp/report.pdf",
 	}
 	for _, u := range allowed {
-		if err := validateScheme(u); err != nil {
+		err := validateScheme(u)
+		if err != nil {
 			t.Errorf("validateScheme(%q) = %v, want nil", u, err)
 		}
 	}
@@ -36,7 +37,8 @@ func TestValidateSchemeRejects(t *testing.T) {
 		"smb://host/share",     //
 	}
 	for _, u := range rejected {
-		if err := validateScheme(u); !errors.Is(err, ErrScheme) {
+		err := validateScheme(u)
+		if !errors.Is(err, ErrScheme) {
 			t.Errorf("validateScheme(%q) = %v, want ErrScheme", u, err)
 		}
 	}
@@ -45,7 +47,8 @@ func TestValidateSchemeRejects(t *testing.T) {
 // TestOpenRejectsBadScheme checks the public entry point refuses a disallowed
 // scheme before it reaches the platform backend (so nothing is launched).
 func TestOpenRejectsBadScheme(t *testing.T) {
-	if err := Open("javascript:alert(1)"); !errors.Is(err, ErrScheme) {
+	err := Open("javascript:alert(1)")
+	if !errors.Is(err, ErrScheme) {
 		t.Fatalf("Open(javascript:) = %v, want ErrScheme", err)
 	}
 }

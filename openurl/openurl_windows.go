@@ -40,7 +40,8 @@ func ensureInit() error {
 }
 
 func openURL(rawurl string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 	op, _ := syscall.UTF16PtrFromString("open") // constant, never contains NUL
@@ -49,14 +50,16 @@ func openURL(rawurl string) error {
 		return fmt.Errorf("openurl: %q: %w", rawurl, err)
 	}
 	// ShellExecuteW returns a value > 32 on success, an error code otherwise.
-	if r := shellExecuteW(0, op, file, nil, nil, swShowNormal); r <= 32 {
+	r := shellExecuteW(0, op, file, nil, nil, swShowNormal)
+	if r <= 32 {
 		return fmt.Errorf("openurl: ShellExecuteW(%q) failed (code %d)", rawurl, r)
 	}
 	return nil
 }
 
 func revealFile(absPath string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 	file, _ := syscall.UTF16PtrFromString("explorer.exe") // constant
@@ -66,7 +69,8 @@ func revealFile(absPath string) error {
 	if err != nil {
 		return fmt.Errorf("openurl: %q: %w", absPath, err)
 	}
-	if r := shellExecuteW(0, nil, file, params, nil, swShowNormal); r <= 32 {
+	r := shellExecuteW(0, nil, file, params, nil, swShowNormal)
+	if r <= 32 {
 		return fmt.Errorf("openurl: reveal %q failed (code %d)", absPath, r)
 	}
 	return nil

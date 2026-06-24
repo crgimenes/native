@@ -75,7 +75,8 @@ func ensureInit() error {
 func pipeName(id string) string { return `\\.\pipe\native-si-` + keyFor(id) }
 
 func acquire(id string, opts Options) (*Instance, error) {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return nil, err
 	}
 	name, err := syscall.UTF16PtrFromString(pipeName(id))
@@ -102,7 +103,8 @@ func acquire(id string, opts Options) (*Instance, error) {
 		// blocked in, so wake the server by connecting to the pipe ourselves: its
 		// ConnectNamedPipe returns, it sees stop closed, and exits. Then close the
 		// server handle.
-		if c := createFileW(name, genericWrite, 0, 0, openExisting, 0, 0); c != invalidHandle {
+		c := createFileW(name, genericWrite, 0, 0, openExisting, 0, 0)
+		if c != invalidHandle {
 			closeHandle(c)
 		}
 		closeHandle(h)
@@ -144,7 +146,8 @@ func servePipe(h uintptr, onMessage func([]string), stop chan struct{}) {
 }
 
 func send(id string, args []string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 	data, err := json.Marshal(args)

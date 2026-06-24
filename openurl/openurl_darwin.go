@@ -28,7 +28,8 @@ func ensureInit() error {
 			"/System/Library/Frameworks/Foundation.framework/Foundation",
 			"/System/Library/Frameworks/AppKit.framework/AppKit",
 		} {
-			if _, err := purego.Dlopen(fw, purego.RTLD_LAZY|purego.RTLD_GLOBAL); err != nil {
+			_, err := purego.Dlopen(fw, purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+			if err != nil {
 				initErr = fmt.Errorf("openurl: load %s: %w", fw, err)
 				return
 			}
@@ -38,7 +39,8 @@ func ensureInit() error {
 }
 
 func sel(name string) objc.SEL {
-	if v, ok := selCache.Load(name); ok {
+	v, ok := selCache.Load(name)
+	if ok {
 		return v.(objc.SEL)
 	}
 	s := objc.RegisterName(name)
@@ -77,7 +79,8 @@ func autorelease(f func()) {
 }
 
 func openURL(rawurl string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 	wsCls, err := class("NSWorkspace")
@@ -103,7 +106,8 @@ func openURL(rawurl string) error {
 }
 
 func revealFile(absPath string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 	wsCls, err := class("NSWorkspace")
