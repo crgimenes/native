@@ -19,7 +19,11 @@ jobs:
       - run: go vet ./...
       # macOS runs the real NSPasteboard round-trip, Windows the Win32 one. Linux
       # has no clipboard backend yet, so its clipboard test skips itself.
-      - run: go test ./...
+      # -timeout/timeout-minutes bound a wedged blocking call (e.g. Windows named
+      # pipe I/O in singleinstance) so it fails fast with a goroutine dump instead
+      # of running to go test's 10m default.
+      - run: go test -timeout 90s ./...
+        timeout-minutes: 5
 
   cross:
     runs-on: ubuntu-latest
