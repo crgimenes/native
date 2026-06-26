@@ -61,7 +61,7 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 | [`mmap`](mmap/)  | Memory-mapped files                              | syscall.Mmap | MapViewOfFile | syscall.Mmap | ✅ |
 | [`singleinstance`](singleinstance/) | Single-instance lock + arg hand-off | flock/socket | named pipe | flock/socket | ✅ |
 | [`openurl`](openurl/) | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open | ✅ |
-| `power`          | Inhibit sleep, battery/power state               | IOKit assertions | SetThreadExecutionState | systemd/UPower | ⬜ |
+| [`power`](power/) | Keep the system awake (inhibit idle sleep)      | IOKit assertion | SetThreadExecutionState | — (needs D-Bus) | ✅ |
 
 ### Lives in glaze, not here
 
