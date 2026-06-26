@@ -36,6 +36,19 @@ The byte slice is the whole API surface. No native handles cross the boundary.
 
 Check the unsupported case with `errors.Is(err, mmap.ErrUnsupported)`.
 
+## Sharing between processes
+
+Map the same file from two processes and they share the same physical pages, so a
+write by one is visible to the other immediately — a fast IPC channel. No `Flush`
+is needed: that only forces dirty pages to *disk*, which sharing doesn't care
+about. On Linux put the file in `/dev/shm` (tmpfs) for a RAM-only backing with no
+disk I/O.
+
+`mmap` gives you the shared bytes, not synchronization. Coordinate access
+yourself — `sync/atomic` on the mapped bytes works across processes (it's the same
+memory), e.g. a lock-free ring buffer with atomic indices. `TestSharedAcrossMappings`
+checks the cross-mapping coherence this relies on.
+
 ## Scope
 
 Maps the **whole** file, **read-write**, **shared**. Partial maps (offset/length),
