@@ -57,6 +57,17 @@ func autorelease(f func()) {
 	f()
 }
 
+// restoreFocus re-activates the app and the window that was key before a modal
+// panel. AppKit does not reliably hand focus back to the host window after the
+// panel closes, so callers (e.g. an Ebitengine window) would be left unfocused.
+// It restores whatever window was key beforehand, so it stays window-agnostic.
+func restoreFocus(app, prev objc.ID) {
+	if prev != 0 {
+		prev.Send(sel("makeKeyAndOrderFront:"), objc.ID(0))
+	}
+	app.Send(sel("activateIgnoringOtherApps:"), true)
+}
+
 // allowedFileTypes builds an NSArray<NSString*> of bare extensions, or 0 (no
 // restriction) when the list is empty or contains a wildcard.
 func allowedFileTypes(exts []string) objc.ID {
@@ -96,6 +107,9 @@ func applyCommon(panel objc.ID, opts Options) {
 func Open(opts Options) string {
 	var path string
 	autorelease(func() {
+		app := class("NSApplication").Send(sel("sharedApplication"))
+		prev := app.Send(sel("keyWindow"))
+		defer restoreFocus(app, prev)
 		panel := class("NSOpenPanel").Send(sel("openPanel"))
 		panel.Send(sel("setCanChooseFiles:"), true)
 		panel.Send(sel("setCanChooseDirectories:"), false)
@@ -118,6 +132,9 @@ func Open(opts Options) string {
 func Save(opts Options) string {
 	var path string
 	autorelease(func() {
+		app := class("NSApplication").Send(sel("sharedApplication"))
+		prev := app.Send(sel("keyWindow"))
+		defer restoreFocus(app, prev)
 		panel := class("NSSavePanel").Send(sel("savePanel"))
 		if opts.Filename != "" {
 			panel.Send(sel("setNameFieldStringValue:"), nsstr(opts.Filename))
