@@ -68,12 +68,12 @@ func cstr(id objc.ID) string {
 	if id == 0 {
 		return ""
 	}
-	ptr := *(*unsafe.Pointer)(unsafe.Pointer(&id)) // circumvent go vet
+	ptr := *(*unsafe.Pointer)(unsafe.Pointer(&id)) // #nosec G103 -- C string memory, not a Go pointer
 	var n int
 	for *(*byte)(unsafe.Add(ptr, n)) != 0 {
 		n++
 	}
-	return string(unsafe.Slice((*byte)(ptr), n))
+	return string(unsafe.Slice((*byte)(ptr), n)) // #nosec G103 -- slice over the C string buffer
 }
 
 // autorelease wraps f in an NSAutoreleasePool, draining it afterward.

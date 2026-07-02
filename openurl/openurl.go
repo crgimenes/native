@@ -20,7 +20,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // ErrUnsupported is returned by operations on a platform that has no backend
@@ -75,7 +74,7 @@ func validateScheme(rawurl string) error {
 	if err != nil {
 		return fmt.Errorf("openurl: parse %q: %w", rawurl, err)
 	}
-	if !allowedSchemes[strings.ToLower(u.Scheme)] {
+	if !allowedSchemes[u.Scheme] {
 		return fmt.Errorf("%w: %q (allowed: http, https, mailto, file)", ErrScheme, u.Scheme)
 	}
 	return nil
