@@ -58,6 +58,7 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 | `keychain`       | Credential / secret storage                      | Keychain | Credential Manager / DPAPI | Secret Service | ⬜ |
 | `fswatch`        | File-system change notifications                 | FSEvents/kqueue | ReadDirectoryChangesW | inotify | ⬜ |
 | `serial`         | Serial port I/O                                  | termios | DCB/CreateFile | termios | ⬜ |
+| [`filedialog`](filedialog/) | Native open/save file panels          | NSOpenPanel/NSSavePanel | ⬜ | ⬜ | 🚧 |
 | [`mmap`](mmap/)  | Memory-mapped files                              | syscall.Mmap | MapViewOfFile | syscall.Mmap | ✅ |
 | [`singleinstance`](singleinstance/) | Single-instance lock + arg hand-off | flock/socket | named pipe | flock/socket | ✅ |
 | [`openurl`](openurl/) | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open | ✅ |
@@ -68,10 +69,12 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 Features that need the application's window/run loop belong in the desktop
 framework, tracked in [glaze's `TODO.md`](https://github.com/crgimenes/glaze/blob/main/TODO.md):
 
-- **File dialogs** (open/save/choose-directory): modal, parented to the window.
-  glaze already drives `NSOpenPanel` for `<input type=file>`.
 - **Native application menus**: the macOS menu bar, About/Preferences/Quit,
-  window menus on Windows/Linux.
+  window menus on Windows/Linux (shipped as `glaze/menu`).
+
+File dialogs started out on that list, but standalone panels turned out not to
+need the host window: they live here as [`filedialog`](filedialog/), and the
+caller is responsible for invoking them on the main thread.
 
 The standalone packages above are imported *by* glaze; they don't depend on it.
 
@@ -81,12 +84,14 @@ Every package follows the same shape so they're predictable to use and to write:
 
 - **One package per directory**, named for the job (`clipboard`, `serial`).
 - **Platform split by build tags / filenames**: `foo_darwin.go`,
-  `foo_windows.go`, `foo_linux.go`, and a `foo_other.go`
-  (`//go:build !darwin && !windows && !linux`) that returns `ErrUnsupported`,
-  so the module always builds for every `GOOS`.
+  `foo_windows.go`, `foo_linux.go` — or a single `foo_unix.go` where one POSIX
+  backend covers them all (`mmap`, `singleinstance`) — plus a `foo_other.go`
+  fallback stub, so the module always builds for every `GOOS`.
 - **Public API in a tag-free file** (`foo.go`): doc comments, exported types,
   and sentinel errors live there and delegate to unexported per-platform funcs.
 - **Sentinel errors**, e.g. `var ErrUnsupported = errors.New("clipboard: not supported on this platform")`.
+  Where an error would be noise the package documents a zero value instead
+  (`filedialog` returns `""` both on cancel and on an unsupported platform).
 - **No native types in signatures.** Inputs/outputs are Go values.
 - **A package `README.md`** (API table, per-platform status, caveats) **and a
   runnable example** in `examples/<pkg>/`, same module, no extra deps. See
