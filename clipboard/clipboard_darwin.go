@@ -31,7 +31,8 @@ func ensureInit() error {
 			"/System/Library/Frameworks/Foundation.framework/Foundation",
 			"/System/Library/Frameworks/AppKit.framework/AppKit",
 		} {
-			if _, err := purego.Dlopen(fw, purego.RTLD_LAZY|purego.RTLD_GLOBAL); err != nil {
+			_, err := purego.Dlopen(fw, purego.RTLD_LAZY|purego.RTLD_GLOBAL)
+			if err != nil {
 				initErr = fmt.Errorf("clipboard: load %s: %w", fw, err)
 				return
 			}
@@ -41,7 +42,8 @@ func ensureInit() error {
 }
 
 func sel(name string) objc.SEL {
-	if v, ok := selCache.Load(name); ok {
+	v, ok := selCache.Load(name)
+	if ok {
 		return v.(objc.SEL)
 	}
 	s := objc.RegisterName(name)
@@ -94,7 +96,8 @@ func autorelease(f func()) {
 }
 
 func readText() (string, error) {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return "", err
 	}
 	pbCls, err := class("NSPasteboard")
@@ -113,7 +116,8 @@ func readText() (string, error) {
 }
 
 func writeText(s string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 	pbCls, err := class("NSPasteboard")

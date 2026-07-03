@@ -92,7 +92,8 @@ func openClipboardRetry() bool {
 }
 
 func readText() (string, error) {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return "", err
 	}
 	if !openClipboardRetry() {
@@ -116,7 +117,8 @@ func readText() (string, error) {
 }
 
 func writeText(s string) error {
-	if err := ensureInit(); err != nil {
+	err := ensureInit()
+	if err != nil {
 		return err
 	}
 

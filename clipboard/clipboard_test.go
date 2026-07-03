@@ -11,7 +11,8 @@ import (
 // clipboard, so it saves and restores whatever text was there. On platforms
 // with no backend yet (Linux, *BSD) it skips instead of failing.
 func TestRoundTrip(t *testing.T) {
-	if _, err := clipboard.ReadText(); errors.Is(err, clipboard.ErrUnsupported) {
+	_, err := clipboard.ReadText()
+	if errors.Is(err, clipboard.ErrUnsupported) {
 		t.Skipf("clipboard backend unavailable here: %v", err)
 	}
 
@@ -24,7 +25,8 @@ func TestRoundTrip(t *testing.T) {
 		"line one\nline two — café ✓ 日本語",
 	}
 	for _, want := range cases {
-		if err := clipboard.WriteText(want); err != nil {
+		err := clipboard.WriteText(want)
+		if err != nil {
 			t.Fatalf("WriteText(%q): %v", want, err)
 		}
 		got, err := clipboard.ReadText()

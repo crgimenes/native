@@ -18,7 +18,8 @@ const nsModalResponseOK = 1
 var selCache sync.Map
 
 func sel(name string) objc.SEL {
-	if v, ok := selCache.Load(name); ok {
+	v, ok := selCache.Load(name)
+	if ok {
 		return v.(objc.SEL)
 	}
 	s := objc.RegisterName(name)
@@ -98,7 +99,8 @@ func applyCommon(panel objc.ID, opts Options) {
 		url := class("NSURL").Send(sel("fileURLWithPath:"), nsstr(opts.Directory))
 		panel.Send(sel("setDirectoryURL:"), url)
 	}
-	if types := allowedFileTypes(opts.Extensions); types != 0 {
+	types := allowedFileTypes(opts.Extensions)
+	if types != 0 {
 		panel.Send(sel("setAllowedFileTypes:"), types)
 	}
 }
@@ -143,7 +145,8 @@ func Save(opts Options) string {
 		if int(panel.Send(sel("runModal"))) != nsModalResponseOK { // #nosec G115 -- small int response
 			return
 		}
-		if u := panel.Send(sel("URL")); u != 0 {
+		u := panel.Send(sel("URL"))
+		if u != 0 {
 			path = cstr(u.Send(sel("path")).Send(sel("UTF8String")))
 		}
 	})

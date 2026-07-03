@@ -24,7 +24,8 @@ func main() {
 	}
 
 	const msg = "hello from native/clipboard"
-	if err := clipboard.WriteText(msg); err != nil {
+	err = clipboard.WriteText(msg)
+	if err != nil {
 		log.Fatalf("write clipboard: %v", err)
 	}
 
@@ -35,7 +36,8 @@ func main() {
 	fmt.Printf("wrote %q\nread  %q\nmatch %v\n", msg, got, got == msg)
 
 	// Be a good citizen: restore the user's previous clipboard.
-	if err := clipboard.WriteText(previous); err != nil {
+	err = clipboard.WriteText(previous)
+	if err != nil {
 		log.Fatalf("restore clipboard: %v", err)
 	}
 	fmt.Println("restored the previous clipboard content")
