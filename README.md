@@ -139,3 +139,14 @@ not sufficient.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+---
+
+## More of my projects
+
+- [glaze](https://github.com/crgimenes/glaze): WebView desktop apps in Go, cgo-free.
+- [minigui](https://github.com/crgimenes/minigui): a tiny immediate-mode GUI for Ebitengine.
+- [kutta](https://github.com/crgimenes/kutta): a 2D wind tunnel; watch air misbehave around an airfoil.
+- [neko](https://github.com/crgimenes/neko): the classic desktop cat chasing your pointer, in Go.
+
+More at [github.com/crgimenes](https://github.com/crgimenes) and [crg.eti.br](https://crg.eti.br).
