@@ -47,10 +47,10 @@ type Config struct {
 	// Tooltip is shown on hover.
 	Tooltip string
 
-	// Icon is a PNG image. macOS renders it in the menu bar (scaled to fit).
-	// Windows currently uses the application's default icon and ignores this
-	// field (custom Windows icons are a follow-up); it is never nil-checked into
-	// an invisible tray.
+	// Icon is a PNG image for the menu bar / tray. macOS renders it, scaled to
+	// fit; with no icon it falls back to Title. Windows ignores this field and
+	// shows the application's default icon (honoring a custom PNG there is a
+	// follow-up). Linux has no backend. It is always safe to set.
 	Icon []byte
 
 	// Items are the menu entries, top to bottom.

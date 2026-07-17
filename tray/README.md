@@ -59,11 +59,16 @@ Only one tray runs per process; a second `Run` returns `ErrAlreadyRunning`.
 | Windows | `Shell_NotifyIconW` + a hidden window + `TrackPopupMenu` | ✅ builds + CI |
 | Linux | — | `ErrUnsupported` |
 
-**Icon.** macOS renders `Config.Icon` (a PNG) scaled into the menu bar; with no
-icon it shows `Title` (or a bullet, so the item is always clickable). Windows
-currently uses the application's default icon and ignores `Config.Icon` — a
-custom Windows icon needs a GDI+ PNG→`HICON` conversion and is a follow-up; the
-tray is always visible regardless.
+### Icon support (`Config.Icon`, a PNG)
+
+| OS | Behavior |
+| --- | --- |
+| macOS | ✅ Renders the PNG, scaled into the menu bar. With no icon it shows `Title`, or a bullet, so the item is always clickable. |
+| Windows | ⚠️ **`Config.Icon` is ignored.** The tray shows the application's default icon. Honoring a custom PNG needs a GDI+ PNG→`HICON` conversion — a known follow-up. The tray is always visible regardless. |
+| Linux | n/a — `ErrUnsupported` (no backend). |
+
+So a caller can always pass `Config.Icon` and it "shows when possible": a real
+icon on macOS, the default app icon on Windows, nothing on Linux.
 
 **Why Linux is unsupported.** A Linux tray is a StatusNotifierItem plus a
 `com.canonical.dbusmenu` export over **D-Bus** — a dependency this module avoids —
