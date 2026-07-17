@@ -45,16 +45,14 @@ well-served elsewhere:
 
 ## Packages
 
-The ordered build plan (value × ease, per-package approach, and the cgo-free
-gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
-✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
+Status: ✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
 [glaze](https://github.com/crgimenes/glaze) instead (window/app-coupled).
 
 | Package          | What                                             | macOS | Windows | Linux | Status |
 | ---------------- | ------------------------------------------------ | ----- | ------- | ----- | ------ |
 | [`clipboard`](clipboard/) | Read/write text clipboard                   | NSPasteboard | Win32 clipboard | X11/Wayland | 🚧 |
 | `notify`         | Desktop notifications                            | UNUserNotification | WinRT toast | D-Bus | ⬜ |
-| `tray`           | System tray / status-bar icon + menu             | NSStatusItem | Shell_NotifyIcon | StatusNotifierItem | ⬜ |
+| [`tray`](tray/)  | System tray / status-bar icon + menu             | NSStatusItem | Shell_NotifyIcon | — (needs D-Bus) | ✅ |
 | `keychain`       | Credential / secret storage                      | Keychain | Credential Manager / DPAPI | Secret Service | ⬜ |
 | `fswatch`        | File-system change notifications                 | FSEvents/kqueue | ReadDirectoryChangesW | inotify | ⬜ |
 | `serial`         | Serial port I/O                                  | termios | DCB/CreateFile | termios | ⬜ |
@@ -68,7 +66,7 @@ gotchas carried over from glaze) lives in [TODO.md](TODO.md). Status here:
 ### Lives in glaze, not here
 
 Features that need the application's window/run loop belong in the desktop
-framework, tracked in [glaze's `TODO.md`](https://github.com/crgimenes/glaze/blob/main/TODO.md):
+framework, [glaze](https://github.com/crgimenes/glaze):
 
 - **Native application menus**: the macOS menu bar, About/Preferences/Quit,
   window menus on Windows/Linux (shipped as `glaze/menu`).
