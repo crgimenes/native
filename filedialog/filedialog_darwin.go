@@ -6,7 +6,6 @@ package filedialog
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"unsafe"
 
@@ -72,15 +71,8 @@ func restoreFocus(app, prev objc.ID) {
 // allowedFileTypes builds an NSArray<NSString*> of bare extensions, or 0 (no
 // restriction) when the list is empty or contains a wildcard.
 func allowedFileTypes(exts []string) objc.ID {
-	clean := make([]string, 0, len(exts))
-	for _, e := range exts {
-		e = strings.TrimPrefix(e, ".")
-		if e == "" || e == "*" {
-			return 0
-		}
-		clean = append(clean, e)
-	}
-	if len(clean) == 0 {
+	clean := cleanExtensions(exts)
+	if clean == nil {
 		return 0
 	}
 	arr := class("NSMutableArray").Send(sel("array"))
@@ -136,19 +128,15 @@ func runOpenPanel(opts Options, chooseDirs bool) string {
 	return path
 }
 
-// Open shows a modal open-file panel and returns the chosen path ("" if cancelled).
-func Open(opts Options) string {
+func open(opts Options) string {
 	return runOpenPanel(opts, false)
 }
 
-// PickDirectory shows a modal choose-directory panel and returns the chosen
-// path ("" if cancelled).
-func PickDirectory(opts Options) string {
+func pickDirectory(opts Options) string {
 	return runOpenPanel(opts, true)
 }
 
-// Save shows a modal save-file panel and returns the chosen path ("" if cancelled).
-func Save(opts Options) string {
+func save(opts Options) string {
 	var path string
 	autorelease(func() {
 		app := class("NSApplication").Send(sel("sharedApplication"))

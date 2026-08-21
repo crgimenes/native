@@ -24,6 +24,38 @@ jobs:
       # of running to go test's 10m default.
       - run: go test -timeout 90s ./...
         timeout-minutes: 5
+      # The filedialog GTK smoke skips without a display; run it for real under
+      # xvfb. dbus-run-session provides the session bus GTK's at-spi bridge
+      # needs (without it gtk_init can hang — a lesson from real hardware).
+      # -count=1 defeats the test cache so the headless skip above is not
+      # replayed here.
+      - name: filedialog GTK smoke (xvfb)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb xdotool libgtk-3-0
+          dbus-run-session -- xvfb-run -a go test -timeout 90s -count 1 -v -run TestGTKSmoke ./filedialog/
+        timeout-minutes: 5
+      # End-to-end modal test: open the example's three real GtkFileChooserNative
+      # panels under xvfb and drive them with xdotool — Escape cancels the open
+      # and directory panels, and typing a name + Return in the save panel must
+      # come back as a filesystem path (the accept marshaling path). The shell
+      # `timeout` fails fast with the captured output if a panel wedges.
+      - name: filedialog modal drive (xvfb + xdotool)
+        if: runner.os == 'Linux'
+        run: |
+          cat > /tmp/drive.sh <<'EOF'
+          #!/bin/bash
+          ( sleep 6; xdotool key Escape
+            sleep 3; xdotool type "picked-by-ci.txt"; sleep 1; xdotool key Return
+            sleep 3; xdotool key Escape ) &
+          timeout 120 go run ./examples/filedialog | tee /tmp/dialog-out.txt
+          EOF
+          chmod +x /tmp/drive.sh
+          dbus-run-session -- xvfb-run -a /tmp/drive.sh
+          grep -q '^open: canceled' /tmp/dialog-out.txt
+          grep -q '^save: .*picked-by-ci.txt' /tmp/dialog-out.txt
+          grep -q '^directory: canceled' /tmp/dialog-out.txt
+        timeout-minutes: 5
 
   cross:
     runs-on: ubuntu-latest

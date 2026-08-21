@@ -56,7 +56,7 @@ Status: ✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
 | `keychain`       | Credential / secret storage                      | Keychain | Credential Manager / DPAPI | Secret Service | ⬜ |
 | `fswatch`        | File-system change notifications                 | FSEvents/kqueue | ReadDirectoryChangesW | inotify | ⬜ |
 | `serial`         | Serial port I/O                                  | termios | DCB/CreateFile | termios | ⬜ |
-| [`filedialog`](filedialog/) | Native open/save file panels          | NSOpenPanel/NSSavePanel | ⬜ | ⬜ | 🚧 |
+| [`filedialog`](filedialog/) | Native open/save file panels          | NSOpenPanel/NSSavePanel | Common Item Dialog (COM) | GtkFileChooserNative | ✅ |
 | [`mmap`](mmap/)  | Memory-mapped files                              | syscall.Mmap | MapViewOfFile | syscall.Mmap | ✅ |
 | [`singleinstance`](singleinstance/) | Single-instance lock + arg hand-off | flock/socket | named pipe | flock/socket | ✅ |
 | [`openurl`](openurl/) | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open | ✅ |
