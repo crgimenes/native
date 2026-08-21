@@ -7,6 +7,7 @@ package bookmark
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"sync"
 	"unsafe"
 
@@ -74,7 +75,18 @@ func cstr(id objc.ID) string {
 	return string(unsafe.Slice((*byte)(ptr), n)) // #nosec G103 -- slice over the C string buffer
 }
 
+// autorelease wraps f in an NSAutoreleasePool, draining it afterward.
+//
+// LockOSThread pins the goroutine for the whole pool lifetime: this package has
+// no main-thread contract (Create/Resolve/release run on any goroutine), and an
+// NSAutoreleasePool is thread-local — if the goroutine migrated between
+// creating the pool and the deferred drain, the pool would drain on the wrong
+// thread and corrupt the autorelease stack (the clipboard package's
+// intermittent SIGSEGV). Defers run LIFO, so drain happens before the unlock,
+// still on the creating thread.
 func autorelease(f func()) {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	pool := class("NSAutoreleasePool").Send(sel("alloc")).Send(sel("init"))
 	defer pool.Send(sel("drain"))
 	f()

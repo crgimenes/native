@@ -51,6 +51,7 @@ Status: ✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
 | Package          | What                                             | macOS | Windows | Linux | Status |
 | ---------------- | ------------------------------------------------ | ----- | ------- | ----- | ------ |
 | [`clipboard`](clipboard/) | Read/write text clipboard                   | NSPasteboard | Win32 clipboard | X11/Wayland | 🚧 |
+| [`bookmark`](bookmark/) | Persist access to user-picked files across launches | security-scoped NSURL bookmark | path token | path token | ✅ |
 | `notify`         | Desktop notifications                            | UNUserNotification | WinRT toast | D-Bus | ⬜ |
 | [`tray`](tray/)  | System tray / status-bar icon + menu             | NSStatusItem | Shell_NotifyIcon | — (needs D-Bus) | ✅ |
 | `keychain`       | Credential / secret storage                      | Keychain | Credential Manager / DPAPI | Secret Service | ⬜ |
