@@ -1,5 +1,5 @@
-// Package filedialog shows the operating system's native open and save file
-// panels, cgo-free.
+// Package filedialog shows the operating system's native open, save, and
+// choose-directory panels, cgo-free.
 //
 // Threading: the panels are platform UI (AppKit, GTK, Win32) and must be invoked
 // on the program's main thread. This package does not impose a threading model —
@@ -21,11 +21,11 @@ type Options struct {
 	// platform default (usually the last-used directory).
 	Directory string
 
-	// Filename is the suggested file name. Used by Save and ignored by Open.
+	// Filename is the suggested file name. Used only by Save.
 	Filename string
 
 	// Extensions restricts selectable files to these extensions, given without
 	// the leading dot (e.g. {"afoil", "dat"}). Empty, or any "*"/"" entry,
-	// allows all files.
+	// allows all files. Ignored by PickDirectory.
 	Extensions []string
 }

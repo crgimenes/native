@@ -1,6 +1,6 @@
 # filedialog
 
-Native open/save file panels, cgo-free.
+Native open/save/choose-directory panels, cgo-free.
 
 ```go
 path := filedialog.Open(filedialog.Options{
@@ -14,6 +14,10 @@ if path != "" {
 out := filedialog.Save(filedialog.Options{
     Title:    "Save scene",
     Filename: "untitled.afoil",
+})
+
+dir := filedialog.PickDirectory(filedialog.Options{
+    Title: "Choose migrations directory",
 })
 ```
 
@@ -34,6 +38,7 @@ ebiten.RunOnMainThread(func() {
 
 ## Platforms
 
-- macOS: `NSOpenPanel` / `NSSavePanel` via purego's Objective-C runtime.
+- macOS: `NSOpenPanel` / `NSSavePanel` via purego's Objective-C runtime
+  (`PickDirectory` is `NSOpenPanel` in directory mode).
 - Linux, Windows: not implemented yet (the calls return `""`); GTK and Win32
   backends can be ported in.

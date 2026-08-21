@@ -11,3 +11,6 @@ func Open(_ Options) string { return "" }
 
 // Save is the no-op stub; see the darwin build for the real implementation.
 func Save(_ Options) string { return "" }
+
+// PickDirectory is the no-op stub; see the darwin build for the real implementation.
+func PickDirectory(_ Options) string { return "" }

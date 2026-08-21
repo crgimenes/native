@@ -1,5 +1,6 @@
 // Command filedialog demonstrates github.com/crgimenes/native/filedialog: it
-// shows the native open panel, then the native save panel. Run it with:
+// shows the native open panel, the native save panel, then the native
+// choose-directory panel. Run it with:
 //
 //	go run ./examples/filedialog
 //
@@ -32,9 +33,18 @@ func main() {
 		Title:    "Save example note",
 		Filename: "note.txt",
 	})
-	if saved == "" {
-		fmt.Println("save: canceled (or platform not supported yet)")
-		return
+	saveMsg := "save: canceled (or platform not supported yet)"
+	if saved != "" {
+		saveMsg = fmt.Sprintf("save: %s (nothing is written; the panel only picks the path)", saved)
 	}
-	fmt.Printf("save: %s (nothing is written; the panel only picks the path)\n", saved)
+	fmt.Println(saveMsg)
+
+	dir := filedialog.PickDirectory(filedialog.Options{
+		Title: "Pick any directory",
+	})
+	dirMsg := "directory: canceled (or platform not supported yet)"
+	if dir != "" {
+		dirMsg = "directory: " + dir
+	}
+	fmt.Println(dirMsg)
 }

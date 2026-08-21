@@ -105,16 +105,22 @@ func applyCommon(panel objc.ID, opts Options) {
 	}
 }
 
-// Open shows a modal open-file panel and returns the chosen path ("" if cancelled).
-func Open(opts Options) string {
+// runOpenPanel shows a modal NSOpenPanel in file mode or directory mode and
+// returns the chosen path ("" if cancelled).
+func runOpenPanel(opts Options, chooseDirs bool) string {
+	if chooseDirs {
+		// Extension filtering is meaningless for directories, and a stray
+		// allowedFileTypes makes matching folders show up as file packages.
+		opts.Extensions = nil
+	}
 	var path string
 	autorelease(func() {
 		app := class("NSApplication").Send(sel("sharedApplication"))
 		prev := app.Send(sel("keyWindow"))
 		defer restoreFocus(app, prev)
 		panel := class("NSOpenPanel").Send(sel("openPanel"))
-		panel.Send(sel("setCanChooseFiles:"), true)
-		panel.Send(sel("setCanChooseDirectories:"), false)
+		panel.Send(sel("setCanChooseFiles:"), !chooseDirs)
+		panel.Send(sel("setCanChooseDirectories:"), chooseDirs)
 		panel.Send(sel("setAllowsMultipleSelection:"), false)
 		applyCommon(panel, opts)
 		if int(panel.Send(sel("runModal"))) != nsModalResponseOK { // #nosec G115 -- small int response
@@ -128,6 +134,17 @@ func Open(opts Options) string {
 		path = cstr(u.Send(sel("path")).Send(sel("UTF8String")))
 	})
 	return path
+}
+
+// Open shows a modal open-file panel and returns the chosen path ("" if cancelled).
+func Open(opts Options) string {
+	return runOpenPanel(opts, false)
+}
+
+// PickDirectory shows a modal choose-directory panel and returns the chosen
+// path ("" if cancelled).
+func PickDirectory(opts Options) string {
+	return runOpenPanel(opts, true)
 }
 
 // Save shows a modal save-file panel and returns the chosen path ("" if cancelled).
