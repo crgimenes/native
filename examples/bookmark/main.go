@@ -48,6 +48,8 @@ func main() {
 	}
 	defer release()
 
+	// #nosec G304 -- path comes from a security-scoped bookmark the user
+	// granted; resolving one and reading through it is what this example shows.
 	data, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatalf("read via resolved path: %v", err)
