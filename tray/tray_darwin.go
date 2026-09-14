@@ -32,10 +32,14 @@ type cgPoint struct{ X, Y float64 }
 type nsSize struct{ W, H float64 }
 
 var (
-	mu          sync.Mutex
-	running     bool
-	activeItems []Item
-	trayTarget  objc.ID
+	mu           sync.Mutex
+	running      bool
+	activeItems  []Item
+	trayTarget   objc.ID
+	trayItem     objc.ID // the NSStatusItem, so SetItems can swap its menu
+	pendingItems []Item  // handed to the main thread by SetItems
+	pendingSet   bool    // distinguishes "nothing staged" from "staged nil"
+	onReady      func()
 
 	initOnce sync.Once
 	initErr  error
@@ -95,6 +99,18 @@ func ensureInit() error {
 						stopRunLoop()
 					},
 				},
+				{
+					Cmd: sel("trayReady"),
+					Fn: func(self objc.ID, _cmd objc.SEL) {
+						fireReady()
+					},
+				},
+				{
+					Cmd: sel("trayApplyItems"),
+					Fn: func(self objc.ID, _cmd objc.SEL) {
+						applyPendingItems()
+					},
+				},
 			})
 		if err != nil {
 			initErr = fmt.Errorf("tray: register target class: %w", err)
@@ -128,6 +144,7 @@ func run(cfg Config) error {
 	}
 	running = true
 	activeItems = cfg.Items
+	onReady = cfg.OnReady
 	mu.Unlock()
 
 	runtime.LockOSThread()
@@ -143,11 +160,19 @@ func run(cfg Config) error {
 	item.Send(sel("retain")) // the status bar does not keep it alive for us
 
 	applyButton(item.Send(sel("button")), cfg)
-	item.Send(sel("setMenu:"), buildMenu(cfg.Items, target))
+	setMenuReleasing(item, buildMenu(cfg.Items, target))
 
 	mu.Lock()
 	trayTarget = target
+	trayItem = item
 	mu.Unlock()
+
+	// Queued, not called: -performSelectorOnMainThread: enqueues onto the main
+	// run loop, so OnReady fires on the loop's first turn — with the tray
+	// already on screen — instead of before the loop exists.
+	if cfg.OnReady != nil {
+		target.Send(sel("performSelectorOnMainThread:withObject:waitUntilDone:"), sel("trayReady"), objc.ID(0), false)
+	}
 
 	app.Send(sel("run")) // blocks until trayStop stops the loop
 
@@ -158,8 +183,72 @@ func run(cfg Config) error {
 	mu.Lock()
 	running = false
 	trayTarget = 0
+	trayItem = 0
 	activeItems = nil
+	pendingItems = nil
+	pendingSet = false
+	onReady = nil
 	mu.Unlock()
+	return nil
+}
+
+// fireReady runs the caller's OnReady on the main thread, once.
+func fireReady() {
+	mu.Lock()
+	fn := onReady
+	onReady = nil
+	mu.Unlock()
+	if fn != nil {
+		fn()
+	}
+}
+
+// applyPendingItems rebuilds the menu from what SetItems staged. Main thread
+// only: it touches AppKit objects.
+func applyPendingItems() {
+	mu.Lock()
+	// Two SetItems calls in a row post two messages; the second finds the
+	// staging already consumed and must leave the menu alone, not rebuild it
+	// from nil.
+	if !pendingSet {
+		mu.Unlock()
+		return
+	}
+	items := pendingItems
+	pendingItems = nil
+	pendingSet = false
+	target := trayTarget
+	item := trayItem
+	if item == 0 || target == 0 {
+		mu.Unlock()
+		return
+	}
+	activeItems = items
+	mu.Unlock()
+
+	setMenuReleasing(item, buildMenu(items, target))
+}
+
+// setMenuReleasing hands the menu to the status item and drops our own
+// reference: -setMenu: retains it, and the previous menu deallocates once it
+// does. Without this every SetItems call would leak an NSMenu.
+func setMenuReleasing(item, menu objc.ID) {
+	item.Send(sel("setMenu:"), menu)
+	menu.Send(sel("release"))
+}
+
+func setItems(items []Item) error {
+	mu.Lock()
+	t := trayTarget
+	if !running || t == 0 {
+		mu.Unlock()
+		return ErrNotRunning
+	}
+	pendingItems = items
+	pendingSet = true
+	mu.Unlock()
+
+	t.Send(sel("performSelectorOnMainThread:withObject:waitUntilDone:"), sel("trayApplyItems"), objc.ID(0), false)
 	return nil
 }
 

@@ -35,9 +35,10 @@ func main() {
 | --- | --- |
 | `Run(cfg Config) error` | Show the tray and drive the OS event loop until `Stop`. **Blocks**; call from the main goroutine (locked to the main OS thread). Returns `ErrUnsupported` / `ErrAlreadyRunning`. |
 | `Stop()` | Hide the tray and make `Run` return. Safe from any goroutine; no-op when idle. |
-| `Config` | `Title`, `Tooltip`, `Icon []byte` (PNG), `Items []Item`. |
+| `SetItems(items []Item) error` | Replace the whole menu while the tray runs. Safe from any goroutine. Returns `ErrNotRunning` when idle. |
+| `Config` | `Title`, `Tooltip`, `Icon []byte` (PNG), `Items []Item`, `OnReady func()`. |
 | `Item` | `Title`, `Disabled`, `Separator`, `OnClick func()`. |
-| `ErrUnsupported`, `ErrAlreadyRunning` | Sentinels. |
+| `ErrUnsupported`, `ErrAlreadyRunning`, `ErrNotRunning` | Sentinels. |
 
 No native handles cross the boundary.
 
@@ -50,6 +51,42 @@ another goroutine. `Stop` is the exception: it is safe to call from anywhere (a
 menu item's `OnClick` typically just calls `tray.Stop`).
 
 Only one tray runs per process; a second `Run` returns `ErrAlreadyRunning`.
+
+## Starting work when the tray is up (`OnReady`)
+
+`Run` blocks, so the code that needs a live tray has to come from somewhere else.
+`OnReady` is that somewhere: it fires once, on the UI thread, after the icon is on
+screen and the event loop is turning — no `time.AfterFunc` guess that is either a
+race (too short) or a visible lag (too long).
+
+```go
+tray.Run(tray.Config{
+	Items:   menu("starting"),
+	OnReady: func() { go poll() }, // the tray exists by now
+})
+```
+
+Like `OnClick`, it runs on the UI thread: keep it short, and hand real work to a
+goroutine.
+
+## Changing the menu at runtime (`SetItems`)
+
+`Config.Items` is read once by `Run`. To show changing status, flip `Pause` to
+`Resume`, or grow a recent-files list, call `SetItems` with the menu you want now
+— replacing the whole menu is how items are added, retitled, greyed out, and
+removed, so there are no indices to keep in sync.
+
+```go
+err := tray.SetItems([]tray.Item{
+	{Title: "Status: " + state, Disabled: true},
+	{Separator: true},
+	{Title: "Quit", OnClick: tray.Stop},
+})
+```
+
+It is safe from any goroutine: the call stages the items and the rebuild happens
+on the UI thread, so it may not have landed yet when `SetItems` returns. With no
+tray running it reports `ErrNotRunning` rather than dropping the update.
 
 ## Platforms
 
@@ -87,6 +124,9 @@ go run ./examples/tray
 
 Set `TRAY_AUTOCLOSE=1` to have it stop itself after a couple of seconds (a
 non-interactive smoke test that the icon comes up and the loop tears down).
+
+The example also exercises both runtime hooks: it logs from `OnReady` and then
+retitles a status item once a second through `SetItems`.
 
 ## Conventions
 

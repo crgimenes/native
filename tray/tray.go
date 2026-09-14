@@ -38,6 +38,10 @@ var ErrUnsupported = errors.New("tray: not supported on this platform")
 // process; only one tray may run at a time.
 var ErrAlreadyRunning = errors.New("tray: already running")
 
+// ErrNotRunning is returned by SetItems when no tray is active, so a menu
+// update that went nowhere is visible instead of silently dropped.
+var ErrNotRunning = errors.New("tray: not running")
+
 // Config describes the tray icon and its menu. It is read once by Run.
 type Config struct {
 	// Title is a short text label. macOS shows it in the menu bar (next to the
@@ -53,8 +57,15 @@ type Config struct {
 	// follow-up). Linux has no backend. It is always safe to set.
 	Icon []byte
 
-	// Items are the menu entries, top to bottom.
+	// Items are the menu entries, top to bottom. SetItems replaces them while
+	// the tray runs.
 	Items []Item
+
+	// OnReady is called once on the UI thread after the tray is visible and the
+	// event loop is turning. It exists so a caller can start work that needs a
+	// live tray without guessing at a delay. Like OnClick it runs on the UI
+	// thread, so keep it short or hand the work to another goroutine.
+	OnReady func()
 }
 
 // Item is one entry in the tray menu.
@@ -82,3 +93,10 @@ func Run(cfg Config) error { return run(cfg) }
 // Stop hides the tray and makes Run return. It is safe to call from any
 // goroutine and is a no-op when no tray is running.
 func Stop() { stop() }
+
+// SetItems replaces the whole menu while the tray is running, which is how an
+// item is added, retitled, greyed out, or removed: pass the menu you want now.
+// It is safe to call from any goroutine; the rebuild happens on the UI thread,
+// so it may not have landed yet when SetItems returns. It reports ErrNotRunning
+// if no tray is active and ErrUnsupported on a platform with no backend.
+func SetItems(items []Item) error { return setItems(items) }

@@ -24,6 +24,25 @@ jobs:
       # of running to go test's 10m default.
       - run: go test -timeout 90s ./...
         timeout-minutes: 5
+      # The tray owns a UI event loop and a real status icon, so its unit test
+      # skips itself on macOS and Windows. This is where that backend actually
+      # runs: TRAY_AUTOCLOSE makes the example tear itself down, and the greps
+      # assert the three things no unit test can reach — OnReady fired (so the
+      # loop turned with the icon up), a SetItems from another goroutine landed
+      # on the UI thread, and Run returned cleanly. Windows has no machine
+      # behind it otherwise, so a red here is the only warning we get.
+      - name: tray example smoke
+        if: runner.os != 'Linux'
+        shell: bash
+        env:
+          TRAY_AUTOCLOSE: "1"
+        run: |
+          go run ./examples/tray 2>&1 | tee tray-out.txt
+          grep -q 'tray is ready' tray-out.txt
+          grep -q 'menu updated' tray-out.txt
+          grep -q 'tray stopped' tray-out.txt
+        timeout-minutes: 5
+
       # The filedialog GTK smoke skips without a display; run it for real under
       # xvfb. dbus-run-session provides the session bus GTK's at-spi bridge
       # needs (without it gtk_init can hang — a lesson from real hardware).

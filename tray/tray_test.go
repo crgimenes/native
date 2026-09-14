@@ -27,3 +27,17 @@ func TestRunUnsupported(t *testing.T) {
 func TestStopWhenIdle(t *testing.T) {
 	tray.Stop()
 }
+
+// TestSetItemsWhenIdle checks that a menu update with no tray running reports
+// why instead of being dropped: ErrNotRunning where there is a backend,
+// ErrUnsupported where there is none.
+func TestSetItemsWhenIdle(t *testing.T) {
+	want := tray.ErrNotRunning
+	if runtime.GOOS != "darwin" && runtime.GOOS != "windows" {
+		want = tray.ErrUnsupported
+	}
+	err := tray.SetItems([]tray.Item{{Title: "later"}})
+	if !errors.Is(err, want) {
+		t.Fatalf("SetItems on %s: got %v, want %v", runtime.GOOS, err, want)
+	}
+}

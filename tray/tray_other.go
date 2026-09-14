@@ -10,3 +10,5 @@ package tray
 func run(_ Config) error { return ErrUnsupported }
 
 func stop() {}
+
+func setItems(_ []Item) error { return ErrUnsupported }

@@ -33,6 +33,8 @@ const (
 	wmRButtonUp = 0x0205
 
 	trayCallbackMsg = wmApp + 1
+	trayReadyMsg    = wmApp + 2
+	traySetItemsMsg = wmApp + 3
 
 	nimAdd    = 0x00000000
 	nimDelete = 0x00000002
@@ -109,11 +111,14 @@ var (
 	initOnce sync.Once
 	initErr  error
 
-	mu       sync.Mutex
-	running  bool
-	trayHwnd uintptr
-	hMenu    uintptr
-	nid      notifyIconData
+	mu           sync.Mutex
+	running      bool
+	trayHwnd     uintptr
+	hMenu        uintptr
+	nid          notifyIconData
+	pendingItems []Item // handed to the UI thread by SetItems
+	pendingSet   bool   // distinguishes "nothing staged" from "staged nil"
+	onReady      func()
 
 	cbMu      sync.Mutex
 	callbacks = map[int]func(){}
@@ -222,6 +227,12 @@ func trayWndProc(hwnd, msg, wParam, lParam uintptr) uintptr {
 			showMenu(hwnd)
 		}
 		return 0
+	case trayReadyMsg:
+		fireReady()
+		return 0
+	case traySetItemsMsg:
+		applyPendingItems()
+		return 0
 	case wmClose:
 		destroyWindow(hwnd)
 		return 0
@@ -293,6 +304,7 @@ func run(cfg Config) error {
 		return err
 	}
 	running = true
+	onReady = cfg.OnReady
 	mu.Unlock()
 
 	runtime.LockOSThread()
@@ -322,6 +334,12 @@ func run(cfg Config) error {
 	trayHwnd = hwnd
 	mu.Unlock()
 
+	// Posted, not called: the message waits in the queue, so OnReady runs on the
+	// loop's first turn with the icon already in the notification area.
+	if cfg.OnReady != nil {
+		postMessageW(hwnd, trayReadyMsg, 0, 0)
+	}
+
 	var msg msgStruct
 	for {
 		r := getMessageW(&msg, 0, 0, 0)
@@ -339,7 +357,59 @@ func run(cfg Config) error {
 	running = false
 	trayHwnd = 0
 	hMenu = 0
+	pendingItems = nil
+	pendingSet = false
+	onReady = nil
 	mu.Unlock()
+	return nil
+}
+
+// fireReady runs the caller's OnReady on the UI thread, once.
+func fireReady() {
+	mu.Lock()
+	fn := onReady
+	onReady = nil
+	mu.Unlock()
+	if fn != nil {
+		fn()
+	}
+}
+
+// applyPendingItems rebuilds the popup from what SetItems staged, destroying the
+// menu it replaces. UI thread only.
+func applyPendingItems() {
+	mu.Lock()
+	// Two SetItems calls in a row post two messages; the second finds the
+	// staging already consumed and must leave the menu alone, not rebuild it
+	// from nil.
+	if !pendingSet {
+		mu.Unlock()
+		return
+	}
+	items := pendingItems
+	pendingItems = nil
+	pendingSet = false
+	old := hMenu
+	mu.Unlock()
+
+	buildMenu(items)
+	if old != 0 {
+		destroyMenu(old)
+	}
+}
+
+func setItems(items []Item) error {
+	mu.Lock()
+	h := trayHwnd
+	if !running || h == 0 {
+		mu.Unlock()
+		return ErrNotRunning
+	}
+	pendingItems = items
+	pendingSet = true
+	mu.Unlock()
+
+	postMessageW(h, traySetItemsMsg, 0, 0) // PostMessage is safe from any thread
 	return nil
 }
 
