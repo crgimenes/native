@@ -178,3 +178,9 @@ func utf16PtrToString(p uintptr) string {
 	}
 	return string(utf16.Decode(u16))
 }
+
+// yagni: images only on macOS until a consumer needs them here; Windows would
+// take CF_DIB, which other apps read, besides a registered PNG format.
+func readImage() ([]byte, error) { return nil, ErrUnsupported }
+
+func writeImage(_ []byte) error { return ErrUnsupported }

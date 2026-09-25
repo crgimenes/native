@@ -8,3 +8,9 @@ package clipboard
 func readText() (string, error) { return "", ErrUnsupported }
 
 func writeText(s string) error { return ErrUnsupported }
+
+// yagni: images only on macOS until a consumer needs them here; Windows would
+// take CF_DIB, which other apps read, besides a registered PNG format.
+func readImage() ([]byte, error) { return nil, ErrUnsupported }
+
+func writeImage(_ []byte) error { return ErrUnsupported }

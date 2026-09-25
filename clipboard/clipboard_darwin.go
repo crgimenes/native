@@ -13,8 +13,14 @@ import (
 	"github.com/ebitengine/purego/objc"
 )
 
-// NSPasteboardTypeString is the UTI for plain UTF-8 text on the pasteboard.
-const nsPasteboardTypeString = "public.utf8-plain-text"
+// Pasteboard types (UTIs).
+const (
+	nsPasteboardTypeString = "public.utf8-plain-text"
+	nsPasteboardTypePNG    = "public.png"
+	nsPasteboardTypeTIFF   = "public.tiff"
+
+	nsBitmapImageFileTypePNG = 4
+)
 
 var (
 	initOnce sync.Once
@@ -132,6 +138,84 @@ func writeText(s string) error {
 	})
 	if !ok {
 		return errors.New("clipboard: NSPasteboard setString:forType: failed")
+	}
+	return nil
+}
+
+// goBytes copies an NSData's contents into Go memory.
+func goBytes(data objc.ID) []byte {
+	n := int(data.Send(sel("length"))) // #nosec G115 -- NSUInteger length of pasteboard data
+	if n == 0 {
+		return nil
+	}
+	p := data.Send(sel("bytes"))
+	src := unsafe.Slice((*byte)(*(*unsafe.Pointer)(unsafe.Pointer(&p))), n) // #nosec G103 -- NSData buffer, not a Go pointer
+	return append([]byte(nil), src...)
+}
+
+func readImage() ([]byte, error) {
+	err := ensureInit()
+	if err != nil {
+		return nil, err
+	}
+	pbCls, err := class("NSPasteboard")
+	if err != nil {
+		return nil, err
+	}
+	repCls, err := class("NSBitmapImageRep")
+	if err != nil {
+		return nil, err
+	}
+	var out []byte
+	autorelease(func() {
+		pb := pbCls.Send(sel("generalPasteboard"))
+		data := pb.Send(sel("dataForType:"), nsstr(nsPasteboardTypePNG))
+		if data != 0 {
+			out = goBytes(data)
+			return
+		}
+		// Screenshots and Preview put TIFF here; hand back PNG all the same.
+		data = pb.Send(sel("dataForType:"), nsstr(nsPasteboardTypeTIFF))
+		if data == 0 {
+			return
+		}
+		rep := repCls.Send(sel("imageRepWithData:"), data)
+		if rep == 0 {
+			return
+		}
+		png := rep.Send(sel("representationUsingType:properties:"), uint(nsBitmapImageFileTypePNG), objc.ID(0))
+		if png != 0 {
+			out = goBytes(png)
+		}
+	})
+	return out, nil
+}
+
+func writeImage(png []byte) error {
+	if len(png) == 0 {
+		return errors.New("clipboard: empty image")
+	}
+	err := ensureInit()
+	if err != nil {
+		return err
+	}
+	pbCls, err := class("NSPasteboard")
+	if err != nil {
+		return err
+	}
+	dataCls, err := class("NSData")
+	if err != nil {
+		return err
+	}
+	var ok bool
+	autorelease(func() {
+		data := dataCls.Send(sel("dataWithBytes:length:"), unsafe.Pointer(&png[0]), uint(len(png))) // #nosec G103 -- NSData copies the bytes before returning
+		pb := pbCls.Send(sel("generalPasteboard"))
+		pb.Send(sel("clearContents"))
+		ok = pb.Send(sel("setData:forType:"), data, nsstr(nsPasteboardTypePNG)) != 0
+	})
+	if !ok {
+		return errors.New("clipboard: NSPasteboard setData:forType: failed")
 	}
 	return nil
 }
