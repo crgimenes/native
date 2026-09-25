@@ -50,7 +50,7 @@ Status: ✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
 
 | Package          | What                                             | macOS | Windows | Linux | Status |
 | ---------------- | ------------------------------------------------ | ----- | ------- | ----- | ------ |
-| [`clipboard`](clipboard/) | Read/write text clipboard                   | NSPasteboard | Win32 clipboard | X11/Wayland | 🚧 |
+| [`clipboard`](clipboard/) | Read/write text clipboard; images as PNG (macOS) | NSPasteboard | Win32 clipboard | X11/Wayland | 🚧 |
 | [`bookmark`](bookmark/) | Persist access to user-picked files across launches | security-scoped NSURL bookmark | path token | path token | ✅ |
 | `notify`         | Desktop notifications                            | UNUserNotification | WinRT toast | D-Bus | ⬜ |
 | [`tray`](tray/)  | System tray / status-bar icon + menu             | NSStatusItem | Shell_NotifyIcon | — (needs D-Bus) | ✅ |
@@ -62,6 +62,8 @@ Status: ✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
 | [`singleinstance`](singleinstance/) | Single-instance lock + arg hand-off | flock/socket | named pipe | flock/socket | ✅ |
 | [`openurl`](openurl/) | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open | ✅ |
 | [`power`](power/) | Keep the system awake (inhibit idle sleep)      | IOKit assertion | SetThreadExecutionState | — (needs D-Bus) | ✅ |
+| [`alert`](alert/) | Modal alert: message, buttons, optional text field | NSAlert | — | — | 🚧 |
+| [`pointer`](pointer/) | Pointer events GLFW toolkits drop (trackpad pinch) | local NSEvent monitor | — | — | 🚧 |
 | [`nocapture`](nocapture/) | Black out a window in screenshots/recordings | — (Apple removed the API) | SetWindowDisplayAffinity | — (no compositor API) | ✅ |
 
 ### Lives in glaze, not here
