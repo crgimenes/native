@@ -62,7 +62,7 @@ Status: ✅ done · 🚧 in progress · ⬜ planned · 🟦 lives in
 | [`singleinstance`](singleinstance/) | Single-instance lock + arg hand-off | flock/socket | named pipe | flock/socket | ✅ |
 | [`openurl`](openurl/) | Open URL in browser, reveal file in file manager | NSWorkspace | ShellExecuteW | xdg-open | ✅ |
 | [`power`](power/) | Keep the system awake (inhibit idle sleep)      | IOKit assertion | SetThreadExecutionState | — (needs D-Bus) | ✅ |
-| [`alert`](alert/) | Modal alert: message, buttons, optional text field | NSAlert | — | — | 🚧 |
+| [`alert`](alert/) | Modal alert: message, buttons, optional text field | NSAlert | — | GtkDialog | 🚧 |
 | [`pointer`](pointer/) | Pointer events GLFW toolkits drop (trackpad pinch) | local NSEvent monitor | — | — | 🚧 |
 | [`nocapture`](nocapture/) | Black out a window in screenshots/recordings | — (Apple removed the API) | SetWindowDisplayAffinity | — (no compositor API) | ✅ |
 

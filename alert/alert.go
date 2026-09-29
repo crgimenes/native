@@ -5,8 +5,9 @@
 // as with filedialog; an Ebitengine app wraps the call in
 // ebiten.RunOnMainThread.
 //
-// Implemented on macOS (NSAlert). Elsewhere Show returns ErrUnsupported, and
-// the caller keeps a dialog of its own.
+// Implemented on macOS (NSAlert) and Linux (a GtkDialog, GTK3 or GTK4,
+// joining the GTK the process already loaded). Elsewhere Show returns
+// ErrUnsupported, and the caller keeps a dialog of its own.
 package alert
 
 import "errors"

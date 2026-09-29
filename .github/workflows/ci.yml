@@ -52,7 +52,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq xvfb xdotool libgtk-3-0
-          dbus-run-session -- xvfb-run -a go test -timeout 90s -count 1 -v -run TestGTKSmoke ./filedialog/
+          dbus-run-session -- xvfb-run -a go test -timeout 90s -count 1 -v -run 'TestGTKSmoke|TestGTKDialog' ./filedialog/ ./alert/
         timeout-minutes: 5
       # End-to-end modal test: open the example's three real GtkFileChooserNative
       # panels under xvfb and drive them with xdotool — Escape cancels the open
@@ -74,6 +74,24 @@ jobs:
           grep -q '^open: canceled' /tmp/dialog-out.txt
           grep -q '^save: .*picked-by-ci.txt' /tmp/dialog-out.txt
           grep -q '^directory: canceled' /tmp/dialog-out.txt
+        timeout-minutes: 5
+      # The same for alert: Escape cancels the first input alert, typing plus
+      # Return answers the second. xvfb has no window manager to focus a new
+      # dialog, so the script focuses it by title before each key.
+      - name: alert modal drive (xvfb + xdotool)
+        if: runner.os == 'Linux'
+        run: |
+          cat > /tmp/alert.sh <<'EOF'
+          #!/bin/bash
+          focus() { W=$(xdotool search --name '^native/alert$' | tail -1); [ -n "$W" ] && xdotool windowfocus "$W"; }
+          ( sleep 6; focus; xdotool key Escape
+            sleep 3; focus; xdotool type "typed-by-ci"; sleep 1; xdotool key Return ) &
+          timeout 120 go run ./examples/alert | tee /tmp/alert-out.txt
+          EOF
+          chmod +x /tmp/alert.sh
+          dbus-run-session -- xvfb-run -a /tmp/alert.sh
+          grep -q '^alert 1: canceled' /tmp/alert-out.txt
+          grep -q '^alert 2: typed-by-ci' /tmp/alert-out.txt
         timeout-minutes: 5
 
   cross:
