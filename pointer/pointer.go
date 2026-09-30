@@ -10,9 +10,18 @@
 // ErrUnsupported.
 package pointer
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-var ErrUnsupported = errors.New("pointer: not supported on this platform")
+// ErrUnsupported is returned by Watch on a platform with no pointer backend.
+//
+// It wraps the standard errors.ErrUnsupported, so a caller that uses several of
+// these packages can test them all with one errors.Is instead of importing each
+// package to name its sentinel — and keeps working when a package is added.
+// errors.Is against this variable still matches, as before.
+var ErrUnsupported = fmt.Errorf("pointer: not supported on this platform: %w", errors.ErrUnsupported)
 
 type Kind int
 
