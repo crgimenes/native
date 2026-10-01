@@ -91,7 +91,12 @@ Every package follows the same shape so they're predictable to use and to write:
   fallback stub, so the module always builds for every `GOOS`.
 - **Public API in a tag-free file** (`foo.go`): doc comments, exported types,
   and sentinel errors live there and delegate to unexported per-platform funcs.
-- **Sentinel errors**, e.g. `var ErrUnsupported = errors.New("clipboard: not supported on this platform")`.
+- **Sentinel errors that wrap the standard one**, e.g.
+  `var ErrUnsupported = fmt.Errorf("clipboard: not supported on this platform: %w", errors.ErrUnsupported)`.
+  The wrapping is what lets an app using several of these packages write one
+  `errors.Is(err, errors.ErrUnsupported)` instead of importing every package to
+  name its own sentinel — and keeps that check working when a package is added.
+  `errors.Is` against the package sentinel still matches, as before.
   Where an error would be noise the package documents a zero value instead
   (`filedialog` returns `""` both on cancel and on an unsupported platform).
 - **No native types in signatures.** Inputs/outputs are Go values.

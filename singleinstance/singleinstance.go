@@ -23,11 +23,17 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"sync"
 )
 
-// ErrUnsupported is returned on a platform with no backend wired up.
-var ErrUnsupported = errors.New("singleinstance: not supported on this platform")
+// ErrUnsupported is returned by Acquire on a platform with no backend.
+//
+// It wraps the standard errors.ErrUnsupported, so a caller that uses several of
+// these packages can test them all with one errors.Is instead of importing each
+// package to name its sentinel — and keeps working when a package is added.
+// errors.Is against this variable still matches, as before.
+var ErrUnsupported = fmt.Errorf("singleinstance: not supported on this platform: %w", errors.ErrUnsupported)
 
 // ErrAlreadyRunning is returned by Acquire when another instance already holds
 // the lock for the given id.

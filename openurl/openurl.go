@@ -22,9 +22,13 @@ import (
 	"path/filepath"
 )
 
-// ErrUnsupported is returned by operations on a platform that has no backend
-// wired up yet.
-var ErrUnsupported = errors.New("openurl: not supported on this platform")
+// ErrUnsupported is returned by operations on a platform that has no backend wired up yet.
+//
+// It wraps the standard errors.ErrUnsupported, so a caller that uses several of
+// these packages can test them all with one errors.Is instead of importing each
+// package to name its sentinel — and keeps working when a package is added.
+// errors.Is against this variable still matches, as before.
+var ErrUnsupported = fmt.Errorf("openurl: not supported on this platform: %w", errors.ErrUnsupported)
 
 // ErrScheme is returned by Open when the URL's scheme is not in the allow-list.
 var ErrScheme = errors.New("openurl: refused URL scheme")

@@ -10,9 +10,18 @@
 // ErrUnsupported, and the caller keeps a dialog of its own.
 package alert
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-var ErrUnsupported = errors.New("alert: not supported on this platform")
+// ErrUnsupported is returned by Show on a platform with no alert backend.
+//
+// It wraps the standard errors.ErrUnsupported, so a caller that uses several of
+// these packages can test them all with one errors.Is instead of importing each
+// package to name its sentinel — and keeps working when a package is added.
+// errors.Is against this variable still matches, as before.
+var ErrUnsupported = fmt.Errorf("alert: not supported on this platform: %w", errors.ErrUnsupported)
 
 var errNoButtons = errors.New("alert: at least one button is required")
 

@@ -25,7 +25,12 @@ import (
 
 // ErrUnsupported reports a token that cannot be resolved on this
 // platform (a macOS security-scoped token on Windows or Linux).
-var ErrUnsupported = errors.New("bookmark: token not resolvable on this platform")
+//
+// It wraps the standard errors.ErrUnsupported, so a caller that uses several of
+// these packages can test them all with one errors.Is instead of importing each
+// package to name its sentinel — and keeps working when a package is added.
+// errors.Is against this variable still matches, as before.
+var ErrUnsupported = fmt.Errorf("bookmark: token not resolvable on this platform: %w", errors.ErrUnsupported)
 
 // Token kinds. A token is the kind byte, a zero byte, then the
 // payload: the literal path for kindPath, the security-scoped bookmark
