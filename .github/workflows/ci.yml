@@ -117,7 +117,8 @@ jobs:
       # A dep or go-directive bump that leaves go.sum behind only surfaces much
       # later, as a build error that does not name its cause.
       - name: go.mod tidy
-        run: go mod tidy -diff || { echo "go.mod/go.sum not tidy: run go mod tidy"; exit 1; }
+        run: |
+          go mod tidy -diff || { echo "go.mod/go.sum not tidy: run go mod tidy"; exit 1; }
       # Keep this pin at a release built against the toolchain in go.mod: the
       # bundled staticcheck must understand the current stdlib (v2.12.2's
       # staticcheck panicked building IR for Go 1.27's internal/poll on linux).
