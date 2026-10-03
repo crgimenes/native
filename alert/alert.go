@@ -10,9 +10,12 @@
 // ErrUnsupported, and the caller keeps a dialog of its own.
 package alert
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-var ErrUnsupported = errors.New("alert: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("alert: not supported on this platform: %w", errors.ErrUnsupported)
 
 var errNoButtons = errors.New("alert: at least one button is required")
 

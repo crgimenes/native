@@ -25,13 +25,14 @@ package nocapture
 
 import (
 	"errors"
+	"fmt"
 	"unsafe"
 )
 
 // ErrUnsupported is returned on a platform with no working backend: Linux has
 // no compositor API for it, and macOS removed the one it had (see the package
 // comment).
-var ErrUnsupported = errors.New("nocapture: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("nocapture: not supported on this platform: %w", errors.ErrUnsupported)
 
 // Protect marks the window's content as capture-protected: captures and
 // screen sharing show it blacked out. The handle is the toolkit's native

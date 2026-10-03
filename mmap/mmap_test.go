@@ -130,3 +130,11 @@ func TestSharedAcrossMappings(t *testing.T) {
 		t.Fatalf("first mapping sees m1[100] = %#x, want 0x42", m1[100])
 	}
 }
+
+// Callers treat an unsupported platform as a normal answer, so the sentinel
+// wraps the stdlib one: one errors.Is covers every optional capability here.
+func TestErrUnsupportedWrapsStdlib(t *testing.T) {
+	if !errors.Is(mmap.ErrUnsupported, errors.ErrUnsupported) {
+		t.Errorf("mmap.ErrUnsupported does not wrap errors.ErrUnsupported (got %v)", mmap.ErrUnsupported)
+	}
+}

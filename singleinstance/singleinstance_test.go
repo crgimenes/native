@@ -100,3 +100,11 @@ func TestSendWithoutInstance(t *testing.T) {
 		t.Fatal("Send with no running instance should fail")
 	}
 }
+
+// Callers treat an unsupported platform as a normal answer, so the sentinel
+// wraps the stdlib one: one errors.Is covers every optional capability here.
+func TestErrUnsupportedWrapsStdlib(t *testing.T) {
+	if !errors.Is(singleinstance.ErrUnsupported, errors.ErrUnsupported) {
+		t.Errorf("singleinstance.ErrUnsupported does not wrap errors.ErrUnsupported (got %v)", singleinstance.ErrUnsupported)
+	}
+}

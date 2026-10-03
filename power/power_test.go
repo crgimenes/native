@@ -48,3 +48,11 @@ func TestUnsupportedReturnsSentinel(t *testing.T) {
 		t.Fatalf("want ErrUnsupported, got %v", err)
 	}
 }
+
+// Callers treat an unsupported platform as a normal answer, so the sentinel
+// wraps the stdlib one: one errors.Is covers every optional capability here.
+func TestErrUnsupportedWrapsStdlib(t *testing.T) {
+	if !errors.Is(power.ErrUnsupported, errors.ErrUnsupported) {
+		t.Errorf("power.ErrUnsupported does not wrap errors.ErrUnsupported (got %v)", power.ErrUnsupported)
+	}
+}

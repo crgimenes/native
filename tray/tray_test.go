@@ -41,3 +41,11 @@ func TestSetItemsWhenIdle(t *testing.T) {
 		t.Fatalf("SetItems on %s: got %v, want %v", runtime.GOOS, err, want)
 	}
 }
+
+// Callers treat an unsupported platform as a normal answer, so the sentinel
+// wraps the stdlib one: one errors.Is covers every optional capability here.
+func TestErrUnsupportedWrapsStdlib(t *testing.T) {
+	if !errors.Is(tray.ErrUnsupported, errors.ErrUnsupported) {
+		t.Errorf("tray.ErrUnsupported does not wrap errors.ErrUnsupported (got %v)", tray.ErrUnsupported)
+	}
+}

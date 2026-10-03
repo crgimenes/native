@@ -29,10 +29,13 @@
 // desktops, so Run returns ErrUnsupported there.
 package tray
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // ErrUnsupported is returned by Run on a platform with no tray backend.
-var ErrUnsupported = errors.New("tray: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("tray: not supported on this platform: %w", errors.ErrUnsupported)
 
 // ErrAlreadyRunning is returned by Run when a tray is already active in this
 // process; only one tray may run at a time.

@@ -13,11 +13,12 @@ package mmap
 
 import (
 	"errors"
+	"fmt"
 	"os"
 )
 
 // ErrUnsupported is returned by Map on a platform with no backend.
-var ErrUnsupported = errors.New("mmap: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("mmap: not supported on this platform: %w", errors.ErrUnsupported)
 
 // MMap is a memory-mapped region. It aliases the file's bytes: writing to the
 // slice writes the file. Don't append to it or reslice past its length, and

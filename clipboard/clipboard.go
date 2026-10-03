@@ -12,11 +12,14 @@
 // platform needs (UTF-16 on Windows, NSString on macOS).
 package clipboard
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // ErrUnsupported is returned by operations on a platform that has no clipboard
 // backend wired up yet.
-var ErrUnsupported = errors.New("clipboard: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("clipboard: not supported on this platform: %w", errors.ErrUnsupported)
 
 // ReadText returns the clipboard's current text content. An empty clipboard (or
 // one holding only non-text data) yields an empty string and a nil error.

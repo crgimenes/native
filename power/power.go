@@ -22,11 +22,12 @@ package power
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 )
 
 // ErrUnsupported is returned by PreventSleep on a platform that has no backend.
-var ErrUnsupported = errors.New("power: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("power: not supported on this platform: %w", errors.ErrUnsupported)
 
 // Token represents one active sleep inhibition. Release it to let the system
 // idle-sleep normally again.

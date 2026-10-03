@@ -88,3 +88,11 @@ func TestImageRoundTrip(t *testing.T) {
 		t.Fatalf("with only text on the clipboard: %d bytes, %v; want none", len(data), err)
 	}
 }
+
+// Callers treat an unsupported platform as a normal answer, so the sentinel
+// wraps the stdlib one: one errors.Is covers every optional capability here.
+func TestErrUnsupportedWrapsStdlib(t *testing.T) {
+	if !errors.Is(clipboard.ErrUnsupported, errors.ErrUnsupported) {
+		t.Errorf("clipboard.ErrUnsupported does not wrap errors.ErrUnsupported (got %v)", clipboard.ErrUnsupported)
+	}
+}

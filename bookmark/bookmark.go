@@ -25,7 +25,7 @@ import (
 
 // ErrUnsupported reports a token that cannot be resolved on this
 // platform (a macOS security-scoped token on Windows or Linux).
-var ErrUnsupported = errors.New("bookmark: token not resolvable on this platform")
+var ErrUnsupported = fmt.Errorf("bookmark: token not resolvable on this platform: %w", errors.ErrUnsupported)
 
 // Token kinds. A token is the kind byte, a zero byte, then the
 // payload: the literal path for kindPath, the security-scoped bookmark

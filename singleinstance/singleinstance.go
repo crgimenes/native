@@ -23,11 +23,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"sync"
 )
 
 // ErrUnsupported is returned on a platform with no backend wired up.
-var ErrUnsupported = errors.New("singleinstance: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("singleinstance: not supported on this platform: %w", errors.ErrUnsupported)
 
 // ErrAlreadyRunning is returned by Acquire when another instance already holds
 // the lock for the given id.

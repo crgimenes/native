@@ -52,3 +52,11 @@ func TestOpenRejectsBadScheme(t *testing.T) {
 		t.Fatalf("Open(javascript:) = %v, want ErrScheme", err)
 	}
 }
+
+// Callers treat an unsupported platform as a normal answer, so the sentinel
+// wraps the stdlib one: one errors.Is covers every optional capability here.
+func TestErrUnsupportedWrapsStdlib(t *testing.T) {
+	if !errors.Is(ErrUnsupported, errors.ErrUnsupported) {
+		t.Errorf("ErrUnsupported does not wrap errors.ErrUnsupported (got %v)", ErrUnsupported)
+	}
+}

@@ -10,9 +10,12 @@
 // ErrUnsupported.
 package pointer
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
-var ErrUnsupported = errors.New("pointer: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("pointer: not supported on this platform: %w", errors.ErrUnsupported)
 
 type Kind int
 

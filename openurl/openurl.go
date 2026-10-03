@@ -24,7 +24,7 @@ import (
 
 // ErrUnsupported is returned by operations on a platform that has no backend
 // wired up yet.
-var ErrUnsupported = errors.New("openurl: not supported on this platform")
+var ErrUnsupported = fmt.Errorf("openurl: not supported on this platform: %w", errors.ErrUnsupported)
 
 // ErrScheme is returned by Open when the URL's scheme is not in the allow-list.
 var ErrScheme = errors.New("openurl: refused URL scheme")
