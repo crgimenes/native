@@ -22,8 +22,12 @@ jobs:
       # -timeout/timeout-minutes bound a wedged blocking call (e.g. Windows named
       # pipe I/O in singleinstance) so it fails fast with a goroutine dump instead
       # of running to go test's 10m default.
+      # NATIVE_NOTIFY_TEST lets notify post a real notification on macOS (the
+      # test binary has no bundle, so it goes through osascript).
       - run: go test -timeout 90s ./...
         timeout-minutes: 5
+        env:
+          NATIVE_NOTIFY_TEST: ${{ runner.os == 'macOS' && '1' || '' }}
       # The tray owns a UI event loop and a real status icon, so its unit test
       # skips itself on macOS and Windows. This is where that backend actually
       # runs: TRAY_AUTOCLOSE makes the example tear itself down, and the greps
